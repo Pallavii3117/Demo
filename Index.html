@@ -1,0 +1,34 @@
+<button id="pasteBtn">Paste from Clipboard</button>
+<div id="result"></div>
+
+<script>
+    document.getElementById('pasteBtn').addEventListener('click', async () => {
+        try {
+            const items = await navigator.clipboard.read();
+            for (let item of items) {
+                for (let type of item.types) {
+                    if (type.startsWith('image/')) {
+                        const blob = await item.getType(type);
+                        uploadImage(new File([blob], "clipboard.png", { type }));
+                        return;
+                    }
+                }
+            }
+            alert('No image in clipboard!');
+        } catch (err) {
+            console.error(err);
+            alert('Clipboard read failed');
+        }
+    });
+
+    async function uploadImage(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch('/upload', {
+            method: 'POST',
+            body: formData
+        });
+        const data = await res.json();
+        document.getElementById('result').textContent = data.text;
+    }
+</script>
